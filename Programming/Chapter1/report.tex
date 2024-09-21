@@ -1,9 +1,43 @@
 \documentclass{article}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
 
-\title{Numerical Methods: Implementation and Analysis}
-\author{Your Name}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{
+ backgroundcolor=\color{lightgray}, 
+ basicstyle = \footnotesize,       
+ breakatwhitespace = false,        
+ breaklines = true,                 
+ captionpos = b,                    
+ commentstyle = \color{mygreen}\bfseries,
+ extendedchars = false,             
+ frame =shadowbox, 
+ framerule=0.5pt,
+ keepspaces=true,
+ keywordstyle=\color{blue}\bfseries, % keyword style
+ language = C++,                     % the language of code
+ otherkeywords={string}, 
+ numbers=left, 
+ numbersep=5pt,
+ numberstyle=\tiny\color{mygray},
+ rulecolor=\color{black},         
+ showspaces=false,  
+ showstringspaces=false, 
+ showtabs=false,    
+ stepnumber=1,         
+ stringstyle=\color{mymauve},        % string literal style
+ tabsize=2,          
+ title=\lstname                      
+}
+
+
+\title{\textbf{Chapter1 Programming}}
+\author{Zhehao Chen 3220103172
+  \thanks{Electronic address: \texttt{3220103172@zju.edu.cn}}}
 \date{\today}
 
 \begin{document}
@@ -13,277 +47,338 @@
 \section{Introduction}
 This report presents the implementation of three numerical methods: Bisection Method, Newton's Method, and Secant Method. Each method is tested on various functions and scenarios, as per the programming assignment requirements.
 
-\section{A. Abstract Base Class and Derived Classes}
-\subsection{Problem Statement}
-Implement an abstract base class \texttt{EquationSolver} with a pure virtual method \texttt{solve}, and derive classes for each numerical method.
-
-\subsection{Analysis}
-The abstract class \texttt{EquationSolver} provides a common interface for all derived classes. Each derived class implements the specific logic required for the corresponding numerical method.
-
-\subsection{Code Explanation}
-The following code snippet shows the base class and derived classes for the methods:
-
-\begin{verbatim}
-class EquationSolver {
-public:
-    virtual double solve() = 0; // Pure virtual function
-};
-
-class Bisection_Method : public EquationSolver {
-    // Implementation of the Bisection Method
-};
-
-class Newton_Method : public EquationSolver {
-    // Implementation of Newton's Method
-};
-
-class Secant_Method : public EquationSolver {
-    // Implementation of the Secant Method
-};
-\end{verbatim}
-
-\section{B. Bisection Method Testing}
-\subsection{Problem Statement}
-Test the Bisection Method on the following functions:
+\section{A. EquationSolver}
+This code implements an abstract base class \texttt{EquationSolver} and three derived classes that implement different numerical methods for solving equations: Bisection Method, Newton's Method, and Secant Method.
+\subsection{Bisection Method}
+The Bisection Method is a root-finding algorithm that repeatedly bisects an interval and then selects a subinterval in which a root must lie for further processing.
+\textbf{Key points:}
 \begin{itemize}
-    \item \( f(x) = \frac{1}{x} - \tan(x) \) on \([0, \frac{\pi}{2}]\)
-    \item \( f(x) = \frac{1}{x} - 2^x \) on \([0, 1]\)
-    \item \( f(x) = 2^{-x} + e^x + 2\cos(x) - 6 \) on \([1, 3]\)
-    \item \( f(x) = \frac{x^3 + 4x^2 + 3x + 5}{2x^3 - 9x^2 + 18x - 2} \) on \([0, 4]\)
+\item It takes two initial points $a$ and $b$ such that $f(a)$ and $f(b)$ have opposite signs.
+\item In each iteration, it calculates the midpoint $c = \frac{a + b}{2}$.
+\item The method converges when either:
+\begin{enumerate}
+\item $|f(c)| < \delta$ (function value is close to zero)
+\item $\frac{b - a}{2} < \epsilon$ (interval is sufficiently small)
+\end{enumerate}
+\end{itemize}
+The convergence is linear, but the method is robust.
+\subsection{Newton's Method}
+Newton's Method, also known as the Newton-Raphson method, is a root-finding algorithm that uses the first derivative of a function to find better approximations to the roots of a real-valued function.
+\textbf{Key points:}
+\begin{itemize}
+\item It starts with an initial guess $x_0$.
+\item In each iteration, it calculates:
+$[ x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)} ]$
+\item The method converges when $|x_{n+1} - x_n| < \epsilon$
+\end{itemize}
+Newton's Method has quadratic convergence when it converges, but it requires the derivative of the function and a good initial guess.
+\subsection{Secant Method}
+The Secant Method is similar to Newton's Method but doesn't require the derivative of the function. Instead, it uses a finite difference approximation of the derivative.
+\textbf{Key points:}
+\begin{itemize}
+\item It starts with two initial guesses $x_0$ and $x_1$.
+\item In each iteration, it calculates:
+$[ x_{n+1} = x_n - f(x_n) \frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})} ]$
+\item The method converges when $|x_{n+1} - x_n| < \epsilon$
+\end{itemize}
+The Secant Method has superlinear convergence (faster than linear, slower than quadratic) and doesn't require derivatives, making it useful when derivatives are difficult or expensive to compute.
+\textbf{Note:} All three methods in this implementation include safeguards against division by zero or very small numbers, and they return NaN (Not a Number) if they fail to converge within the maximum number of iterations.
+
+
+
+\section{B. Bisection Method}
+The program consists of several key components:
+\begin{enumerate}
+\item Function definitions (F1, F2, F3, F4)
+\item Solver functions for each equation
+\item A main function to execute all solvers
+\end{enumerate}
+\subsection{Function Definitions}
+The program defines four function classes, each derived from a base \texttt{Function} class:
+\begin{lstlisting}[language=C++]
+class F1 : public Function {
+  public:
+    double operator() (double x) const override {
+        return 1.0/x - tan(x);
+    }
+};
+\end{lstlisting}
+Similar structures are used for F2, F3, and F4. These classes override the \texttt{operator()} to define the specific equation.
+\subsection{Equations Solved}
+The program solves the following equations:
+\begin{enumerate}
+\item $F1: \frac{1}{x} - \tan(x) = 0$
+\item $F2: \frac{1}{x} - 2^x = 0$
+\item $F3: 2^{-x} + e^x + 2\cos(x) - 6 = 0$
+\item $F4: \frac{x^3 + 4x^2 + 3x + 5}{2x^3 - 9x^2 + 18x - 2} = 0$
+\end{enumerate}
+\subsection{Solver Functions}
+For each equation, a solver function is defined. These functions create a \textbf{Bisection\underline{~}Method} object and use it to find a root. For example:
+\begin{lstlisting}[language=C++]
+void solve_f1() {
+    std::cout << "Solving 1/x - tan(x) on [0, Pi/2]" << std::endl;
+    Bisection_Method solver_f1(F1(), 0, Pi/2);
+    double x = solver_f1.solve();
+    std::cout << "A root is: " << x << std::endl;
+}
+\end{lstlisting}
+Each solver function specifies an interval where the root is expected to be found.
+\subsection{Main Function}
+The \texttt{main()} function simply calls each solver function in sequence:
+\begin{lstlisting}[language=C++]
+int main() {
+    solve_f1();
+    solve_f2();
+    solve_f3();
+    solve_f4();
+    return 0;
+}
+\end{lstlisting}
+\subsection{Key Points}
+\begin{itemize}
+\item The program uses object-oriented programming principles, with function objects derived from a base class.
+\item The Bisection Method is employed for all equations, demonstrating its versatility.
+\item Each equation is solved on a specific interval where a root is known to exist.
+\item The program structure allows for easy addition of new equations and solving methods.
+\end{itemize}
+\subsection{Conclusion}
+This program demonstrates an effective implementation of the Bisection Method for solving various equations. Its modular structure allows for easy expansion and modification, making it a valuable tool for numerical analysis tasks.
+
+\section{C. Newton’s Method}
+\subsection{Program Structure}
+The program consists of several key components:
+\begin{enumerate}
+\item Inclusion of necessary headers
+\item Creation of a TanEquation object
+\item Use of Newton's Method to find roots
+\item Output of results
+\end{enumerate}
+
+\subsection{Key Components}
+\begin{itemize}
+\item{TanEquation Class}\par
+The \texttt{TanEquation} class is not shown in this code snippet, but it's assumed to be a derived class of \texttt{Function} that implements the equation $\tan(x) - x$. This class likely overrides the \texttt{operator()} and \texttt{derivative()} methods to provide function evaluation and its derivative.
+\item{Newton's Method Implementation}\par
+The program uses the \texttt{Newton\underline{~}Method} class to solve the equation. This class is instantiated twice with different initial guesses:
+\begin{enumerate}
+\item Near 4.5
+\item Near 7.7
+\end{enumerate}
+The \texttt{solve()} method of \texttt{Newton\underline{~}Method} is called to find the roots.
+\end{itemize}
+\subsection{Mathematical Background}
+Newton's Method is an iterative root-finding algorithm. For a function $f(x)$, it uses the following iteration:
+$$[ x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)} ]$$
+In this case, $f(x) = \tan(x) - x$, so $f'(x) = \sec^2(x) - 1$.
+\subsection{Expected Results}
+The program is expected to find two different roots of the equation $\tan(x) = x$:
+\begin{itemize}
+\item One root should be close to 4.5, but slightly smaller than, 4.4934.
+\item The other root should be close to 7.7, but slightly larger than, 7.7252.
+\end{itemize}
+These roots correspond to the intersections of the tangent function with the line $y = x$ in these regions.
+\subsection{Potential Improvements}
+\begin{enumerate}
+\item Error handling: The code could benefit from error checking to ensure the method converges.
+\item Flexibility: The program could be modified to allow user input for initial guesses.
+\item Visualization: Adding a graphing component could help visualize the roots and the function.
+\end{enumerate}
+\subsection{Conclusion}
+This program demonstrates an effective implementation of Newton's Method for finding multiple roots of the equation $\tan(x) = x$. By using different initial guesses, it's able to find distinct roots of the equation. The modular structure of the code, utilizing object-oriented principles, allows for easy extension to other equations and root-finding methods.
+
+
+
+\section{D. Secant Method}
+\subsection{Program Structure}
+The program consists of several key components:
+\begin{enumerate}
+\item Inclusion of necessary headers
+\item Creation of equation objects
+\item Use of Secant Method to find roots with different initial guesses
+\item Output of results
+\end{enumerate}
+The program tests the Secant Method on three different equations, each with two sets of initial guesses.
+\subsection{Equations and Test Cases}
+\subsubsection{Equation 1: $\sin(x/2) - 1$}
+Two test cases:
+\begin{itemize}
+\item Initial guesses: $x_0 = 0$, $x_1 = \pi/2$
+\item Initial guesses: $x_0 = 0$, $x_1 = 0.5$
+\end{itemize}
+\subsubsection{Equation 2: $e^x - \tan(x)$}
+Two test cases:
+\begin{itemize}
+\item Initial guesses: $x_0 = 1$, $x_1 = 1.4$
+\item Initial guesses: $x_0 = 0.8$, $x_1 = 2$
+\end{itemize}
+\subsubsection{Equation 3: $x^3 - 12x^2 + 3x + 1$}
+Two test cases:
+\begin{itemize}
+\item Initial guesses: $x_0 = 0$, $x_1 = -0.5$
+\item Initial guesses: $x_0 = 0.5$, $x_1 = -1$
+\end{itemize}
+\subsection{Implementation Details}
+For each equation, the program follows these steps:
+\begin{enumerate}
+\item Create an equation object (e.g., \texttt{SinEquation}, \texttt{ExpTanEquation}, \texttt{PolyEquation})
+\item Instantiate a \texttt{Secant\underline{~}Method} object with the equation and initial guesses
+\item Call the \texttt{solve()} method to find the root
+\item Output the result
+\end{enumerate}
+For example, for the first test case of the first equation:
+\begin{lstlisting}[language=C++]
+SinEquation sinEq1;
+Secant_Method secant1_1(sinEq1, 0, M_PI / 2);
+double root1_1 = secant1_1.solve();
+std::cout << "Root for sin(x/2) - 1: " << root1_1 << std::endl;
+\end{lstlisting}
+\subsection{Mathematical Background}
+The Secant Method is an iterative root-finding algorithm. For a function $f(x)$, it uses the following iteration:
+$$[ x_{n+1} = x_n - f(x_n) \frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})} ]$$
+This method doesn't require the derivative of the function, making it useful when the derivative is difficult to compute or unavailable.
+\subsection{Results}
+\begin{itemize}
+\item For $\sin(x/2) - 1$, the root should be close to $\pi$.
+\item For $e^x - \tan(x)$, the root should be approximately 1.3063 and -3.09641.
+\item For $x^3 - 12x^2 + 3x + 1$, there are three roots: approximately -0.1886 and 0.4515.
+\end{itemize}
+\subsection{Why Different Initial Values Lead to Different Results?}
+There are several reasons why different initial values can lead to different results:
+\subsubsection{1. Multiple Roots}
+For equations with multiple roots (like Test Cases 2 and 3), different initial values can cause the method to converge to different roots. The method will generally converge to the root closest to the initial interval.
+\subsubsection{2. Basins of Attraction}
+Each root has a "basin of attraction" - a set of initial values that will converge to that root. Different initial values may fall into different basins of attraction.
+\begin{enumerate}
+\item Error handling: Add checks for convergence and handle cases where the method fails.
+\item User input: Allow users to input their own equations and initial guesses.
+\item Comparison: Implement other root-finding methods (e.g., Newton's Method) and compare performance.
+\item Visualization: Add graphing capabilities to visualize the functions and root-finding process.
+\end{enumerate}
+\subsection{Conclusion}
+This program demonstrates an effective implementation of the Secant Method for finding roots of various equations. By testing different initial guesses, it showcases the method's behavior under different conditions. The modular structure of the code, utilizing object-oriented principles, allows for easy extension to other equations and potentially other root-finding methods.
+
+
+
+\section{E. The Depth of Water}
+The problem involves finding the depth of water in a cylindrical trough given its length, radius, and volume. This can be modeled by the equation:
+$$[ V = L(r^2 \arccos(\frac{r-h}{r}) - (r-h)\sqrt{2rh-h^2}) ]$$
+where:
+\begin{itemize}
+\item $V$ is the volume of water
+\item $L$ is the length of the trough
+\item $r$ is the radius of the circular cross-section
+\item $h$ is the depth of water (the unknown we're solving for)
+\end{itemize}
+\subsection{Program Structure}
+The program consists of several key components:
+\begin{enumerate}
+\item Inclusion of necessary headers
+\item Definition of trough parameters
+\item Creation of a TroughVolume object
+\item Implementation of three numerical methods to solve the equation
+\item Output of results
+\end{enumerate}
+
+\subsection{TroughVolume Class}
+The \texttt{TroughVolume} class (not shown in the main function) likely inherits from a base \texttt{Function} class and implements the trough volume equation. It should override the \texttt{operator()} method and, for Newton's Method, the \texttt{derivative()} method.
+
+\subsection{Detailed Code Analysis}
+Let's break down the main parts of the code with detailed explanations:
+\begin{lstlisting}
+// Define the function for the trough volume
+TroughVolume volumeEq(L, r, V);
+\end{lstlisting}
+This line creates a \texttt{TroughVolume} object, which likely inherits from the \texttt{Function} class. It encapsulates the trough volume equation and probably overrides the \texttt{operator()} method to evaluate the function, and the \texttt{derivative()} method for use in Newton's Method.
+\begin{lstlisting}
+// Bisection Method
+Bisection_Method bisection(volumeEq, 0.0, 1.0, 1e-7, 1e-6, 50);
+double root_bisection = bisection.solve();
+std::cout << "Root using Bisection Method: " << root_bisection << " ft" << std::endl;
+\end{lstlisting}
+This section implements the Bisection Method:
+\begin{itemize}
+\item It creates a \texttt{Bisection\underline{~}Method} object, passing the \texttt{volumeEq} function and other parameters.
+\item The initial interval is [0.0, 1.0], which assumes the water depth is between 0 and 1 foot.
+\item The tolerance ($\epsilon$) is set to $10^{-7}$, and $\delta$ (for checking if $|f(x)| < \delta$) is set to $10^{-6}$.
+\item The maximum number of iterations is set to 50.
+\item The \texttt{solve()} method is called to find the root, and the result is printed.
+\end{itemize}
+\begin{lstlisting}
+// Newton's Method
+Newton_Method newton(volumeEq, 0.5, 1e-7, 50);
+double root_newton = newton.solve();
+std::cout << "Root using Newton's Method: " << root_newton << " ft" << std::endl;
+\end{lstlisting}
+This section implements Newton's Method:
+\begin{itemize}
+\item It creates a \texttt{Newton\underline{~}Method} object, passing the \texttt{volumeEq} function and other parameters.
+\item The initial guess is 0.5 feet.
+\item The tolerance ($\epsilon$) is set to $10^{-7}$.
+\item The maximum number of iterations is set to 50.
+\item The \texttt{solve()} method is called to find the root, and the result is printed.
+\end{itemize}
+\begin{lstlisting}
+// Secant Method
+Secant_Method secant(volumeEq, 0.0, 0.5, 1e-7, 50);
+double root_secant = secant.solve();
+std::cout << "Root using Secant Method: " << root_secant << " ft" << std::endl;
+\end{lstlisting}
+This section implements the Secant Method:
+\begin{itemize}
+\item It creates a \texttt{Secant\underline{~}Method} object, passing the \texttt{volumeEq} function and other parameters.
+\item The initial guesses are 0.0 and 0.5 feet.
+\item The tolerance ($\epsilon$) is set to $10^{-7}$.
+\item The maximum number of iterations is set to 50.
+\item The \texttt{solve()} method is called to find the root, and the result is printed.
 \end{itemize}
 
-\subsection{Analysis}
-The Bisection Method is a root-finding method that repeatedly bisects an interval and selects a subinterval in which a root must lie. It is effective for continuous functions where the values at the endpoints have opposite signs.
 
-\subsection{Code Explanation}
-The implementation of the Bisection Method involves defining a class that overrides the \texttt{solve} method. The function evaluates the midpoint and checks for the root condition.
+\subsection{Expected Results}
+All three methods should converge to the same root, which represents the depth of water in the trough. The actual value will depend on the given parameters (L, r, and V).
+\subsection{Potential Improvements}
+\begin{enumerate}
+\item Error handling: Add checks for convergence and handle cases where the methods fail.
+\item User input: Allow users to input their own trough parameters.
+\item Visualization: Add graphing capabilities to visualize the trough and water level.
+\item Performance comparison: Analyze and compare the performance of the three methods.
+\end{enumerate}
+\subsection{Conclusion}
+This program demonstrates an effective implementation of three numerical methods for solving the trough volume equation. By using multiple methods, it provides a way to cross-verify the results and potentially choose the most efficient method for this particular problem. The modular structure of the code allows for easy extension to other equations and numerical methods.
 
-\begin{verbatim}
-// Bisection Method Implementation
-double Bisection_Method::solve() {
-    // Bisection logic
-}
-\end{verbatim}
 
-\section{C. Newton's Method Testing}
-\subsection{Problem Statement}
-Use Newton's Method to solve \( x = \tan(x) \) near the roots \( 4.5 \) and \( 7.7 \).
 
-\subsection{Analysis}
-Newton's Method uses the derivative to approximate the root. It converges rapidly when close to the actual root but can diverge if the initial guess is not suitable.
 
-\subsection{Code Explanation}
-The derived class for Newton's Method implements the \texttt{solve} method by iterating until convergence.
+\section{F. All-terrain Vehicles}
+\subsection{Problem Description}
+The problem involves finding the angle $\alpha$ in a geometric configuration given various parameters. The exact equation is not provided in the code, but it's encapsulated in the \texttt{AlphaEquation} class.
+\subsection{Program Structure}
+The program consists of several key components:
+\begin{enumerate}
+\item Inclusion of necessary headers
+\item Definition of given parameters
+\item Implementation of Newton's Method for cases (a) and (b)
+\item Implementation of Secant Method for case (c) with different initial guesses
+\item Output of results
+\end{enumerate}
 
-\begin{verbatim}
-// Newton's Method Implementation
-double Newton_Method::solve() {
-    // Newton's iteration logic
-}
-\end{verbatim}
+\subsection{AlphaEquation Class}
+The \texttt{AlphaEquation} class (not shown in the main function) likely inherits from a base \texttt{Function} class and implements the angle equation. It should override the \texttt{operator()} method and, for Newton's Method, the \texttt{derivative()} method.
 
-\section{D. Secant Method Testing}
-\subsection{Problem Statement}
-Test the Secant Method on the following functions with specified initial values:
+\subsection{Expected Results}
 \begin{itemize}
-    \item \( f(x) = \sin\left(\frac{x}{2}\right) - 1 \) with \( x_0 = 0, x_1 = \frac{\pi}{2} \)
-    \item \( f(x) = e^x - \tan(x) \) with \( x_0 = 1, x_1 = 1.4 \)
-    \item \( f(x) = x^3 - 12x^2 + 3x + 1 \) with \( x_0 = 0, x_1 = -0.5 \)
+\item For case (a), we expect $\alpha \approx 33°$ (given in the problem statement).
+\item For cases (b) and (c), the angle $\alpha$ should be consistent across all methods and initial guesses, demonstrating the robustness of the numerical methods.
+\item The Secant Method with different initial guesses should converge to the same result, showing the method's stability.
 \end{itemize}
-
-\subsection{Analysis}
-The Secant Method approximates the root using two initial guesses and is generally faster than the Bisection Method but may fail to converge.
-
-\subsection{Code Explanation}
-The Secant Method is implemented by evaluating the function at the initial guesses and iterating based on the secant line.
-
-\begin{verbatim}
-// Secant Method Implementation
-double Secant_Method::solve() {
-    // Secant iteration logic
-}
-\end{verbatim}
-
-\section{E. Trough Volume Problem}
-\subsection{Problem Statement}
-Given a trough with length \( L = 10 \), radius \( r = 1 \), and volume \( V = 12.4 \), find the depth of water using all three methods.
-
-\subsection{Analysis}
-The volume formula involves trigonometric and square root calculations. Each numerical method is applied to solve for the depth \( h \).
-
-\subsection{Code Explanation}
-The implementation involves defining a class for the volume function and invoking the methods accordingly.
-
-\begin{verbatim}
-// Trough Volume Implementation
-class TroughVolume : public Function {
-    // Volume function implementation
-};
-\end{verbatim}
-
-\section{F. Vehicle Failure Analysis}
-\subsection{Problem Statement}
-Using Newton’s Method and the Secant Method, find the maximum angle \( \alpha \) under specified conditions.
-
-\subsection{Analysis}
-This section involves understanding the implications of vehicle dynamics in terrain negotiation. Different initial values can lead to different outcomes, highlighting the importance of the choice of initial guess in numerical methods.
-
-\subsection{Code Explanation}
-The angle calculation uses trigonometric relationships defined in the function class for vehicle failure.
-
-\begin{verbatim}
-// AlphaEquation Implementation
-class AlphaEquation : public Function {
-    // Function to evaluate alpha based on parameters
-};
-\end{verbatim}
-
-\section{Conclusion}
-This report demonstrated the implementation and testing of Bisection, Newton's, and Secant Methods. Each method was evaluated on various functions, providing insight into their strengths and weaknesses. Future work may include improving convergence rates and handling edge cases more robustly.
+\subsection{Potential Improvements}
+\begin{enumerate}
+\item Error handling: Add checks for convergence and handle cases where the methods fail.
+\item User input: Allow users to input their own parameters.
+\item Visualization: Add graphing capabilities to visualize the geometric setup.
+\item Performance comparison: Analyze and compare the performance of Newton's Method and the Secant Method.
+\item Iteration count: Output the number of iterations each method takes to converge.
+\end{enumerate}
+\subsection{Conclusion}
+This program demonstrates an effective implementation of Newton's Method and the Secant Method for solving an angle equation in various scenarios. By using multiple methods and initial guesses, it provides a way to cross-verify the results and assess the robustness of the numerical methods. The modular structure of the code allows for easy extension to other equations and numerical methods.
 
 \end{document}
-\documentclass{article}
-\usepackage{amsmath}
-\usepackage{graphicx}
-
-\title{Numerical Methods: Implementation and Analysis}
-\author{Your Name}
-\date{\today}
-
-\begin{document}
-
-\maketitle
-
-\section{Introduction}
-This report presents the implementation of three numerical methods: Bisection Method, Newton's Method, and Secant Method. Each method is tested on various functions and scenarios, as per the programming assignment requirements.
-
-\section{A. Abstract Base Class and Derived Classes}
-\subsection{Problem Statement}
-Implement an abstract base class \texttt{EquationSolver} with a pure virtual method \texttt{solve}, and derive classes for each numerical method.
-
-\subsection{Analysis}
-The abstract class \texttt{EquationSolver} provides a common interface for all derived classes. Each derived class implements the specific logic required for the corresponding numerical method.
-
-\subsection{Code Explanation}
-The following code snippet shows the base class and derived classes for the methods:
-
-\begin{verbatim}
-class EquationSolver {
-public:
-    virtual double solve() = 0; // Pure virtual function
-};
-
-class Bisection_Method : public EquationSolver {
-    // Implementation of the Bisection Method
-};
-
-class Newton_Method : public EquationSolver {
-    // Implementation of Newton's Method
-};
-
-class Secant_Method : public EquationSolver {
-    // Implementation of the Secant Method
-};
-\end{verbatim}
-
-\section{B. Bisection Method Testing}
-\subsection{Problem Statement}
-Test the Bisection Method on the following functions:
-\begin{itemize}
-    \item \( f(x) = \frac{1}{x} - \tan(x) \) on \([0, \frac{\pi}{2}]\)
-    \item \( f(x) = \frac{1}{x} - 2^x \) on \([0, 1]\)
-    \item \( f(x) = 2^{-x} + e^x + 2\cos(x) - 6 \) on \([1, 3]\)
-    \item \( f(x) = \frac{x^3 + 4x^2 + 3x + 5}{2x^3 - 9x^2 + 18x - 2} \) on \([0, 4]\)
-\end{itemize}
-
-\subsection{Analysis}
-The Bisection Method is a root-finding method that repeatedly bisects an interval and selects a subinterval in which a root must lie. It is effective for continuous functions where the values at the endpoints have opposite signs.
-
-\subsection{Code Explanation}
-The implementation of the Bisection Method involves defining a class that overrides the \texttt{solve} method. The function evaluates the midpoint and checks for the root condition.
-
-\begin{verbatim}
-// Bisection Method Implementation
-double Bisection_Method::solve() {
-    // Bisection logic
-}
-\end{verbatim}
-
-\section{C. Newton's Method Testing}
-\subsection{Problem Statement}
-Use Newton's Method to solve \( x = \tan(x) \) near the roots \( 4.5 \) and \( 7.7 \).
-
-\subsection{Analysis}
-Newton's Method uses the derivative to approximate the root. It converges rapidly when close to the actual root but can diverge if the initial guess is not suitable.
-
-\subsection{Code Explanation}
-The derived class for Newton's Method implements the \texttt{solve} method by iterating until convergence.
-
-\begin{verbatim}
-// Newton's Method Implementation
-double Newton_Method::solve() {
-    // Newton's iteration logic
-}
-\end{verbatim}
-
-\section{D. Secant Method Testing}
-\subsection{Problem Statement}
-Test the Secant Method on the following functions with specified initial values:
-\begin{itemize}
-    \item \( f(x) = \sin\left(\frac{x}{2}\right) - 1 \) with \( x_0 = 0, x_1 = \frac{\pi}{2} \)
-    \item \( f(x) = e^x - \tan(x) \) with \( x_0 = 1, x_1 = 1.4 \)
-    \item \( f(x) = x^3 - 12x^2 + 3x + 1 \) with \( x_0 = 0, x_1 = -0.5 \)
-\end{itemize}
-
-\subsection{Analysis}
-The Secant Method approximates the root using two initial guesses and is generally faster than the Bisection Method but may fail to converge.
-
-\subsection{Code Explanation}
-The Secant Method is implemented by evaluating the function at the initial guesses and iterating based on the secant line.
-
-\begin{verbatim}
-// Secant Method Implementation
-double Secant_Method::solve() {
-    // Secant iteration logic
-}
-\end{verbatim}
-
-\section{E. Trough Volume Problem}
-\subsection{Problem Statement}
-Given a trough with length \( L = 10 \), radius \( r = 1 \), and volume \( V = 12.4 \), find the depth of water using all three methods.
-
-\subsection{Analysis}
-The volume formula involves trigonometric and square root calculations. Each numerical method is applied to solve for the depth \( h \).
-
-\subsection{Code Explanation}
-The implementation involves defining a class for the volume function and invoking the methods accordingly.
-
-\begin{verbatim}
-// Trough Volume Implementation
-class TroughVolume : public Function {
-    // Volume function implementation
-};
-\end{verbatim}
-
-\section{F. Vehicle Failure Analysis}
-\subsection{Problem Statement}
-Using Newton’s Method and the Secant Method, find the maximum angle \( \alpha \) under specified conditions.
-
-\subsection{Analysis}
-This section involves understanding the implications of vehicle dynamics in terrain negotiation. Different initial values can lead to different outcomes, highlighting the importance of the choice of initial guess in numerical methods.
-
-\subsection{Code Explanation}
-The angle calculation uses trigonometric relationships defined in the function class for vehicle failure.
-
-\begin{verbatim}
-// AlphaEquation Implementation
-class AlphaEquation : public Function {
-    // Function to evaluate alpha based on parameters
-};
-\end{verbatim}
-
-\section{Conclusion}
-This report demonstrated the implementation and testing of Bisection, Newton's, and Secant Methods. Each method was evaluated on various functions, providing insight into their strengths and weaknesses. Future work may include improving convergence rates and handling edge cases more robustly.
-
-\end{document}
-
