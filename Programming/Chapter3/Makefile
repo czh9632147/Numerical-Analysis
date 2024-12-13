@@ -1,6 +1,6 @@
 # 定义编译器和选项
 CXX = g++
-CXXFLAGS = -Wall -g -Ilibs/eigen -Isrc
+CXXFLAGS = -Ilibs/eigen -Isrc
 
 # 定义源文件和可执行文件
 SRC_DIR = src
